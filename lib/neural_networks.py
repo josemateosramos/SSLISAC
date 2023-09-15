@@ -1,0 +1,8 @@
+# -*- coding: utf-8 -*-
+from torch import nn
+
+class PertNet(nn.Module):
+    def __init__(self,init_vector):
+        super(PertNet, self).__init__()
+        #Define vector to optimize
+        self.d = nn.Parameter(init_vector)
