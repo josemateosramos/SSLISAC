@@ -122,7 +122,7 @@ optimizerUnsuper = torch.optim.Adam(list(network.parameters()), lr = lr_unsuper,
                                     maximize=True)
 
 criterionLoss    = nn.MSELoss()
-train_it         = 400#int(8.5e4)           #Number of training iterations
+train_it         = int(8.5e4)           #Number of training iterations
 train_it_super   = train_it
 train_it_unsuper = train_it-train_it_super
 

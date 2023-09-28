@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import torch.nn as nn
 class PertNet(nn.Module):
     def __init__(self,init_vector):
         super(PertNet, self).__init__()
