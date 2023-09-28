@@ -18,11 +18,11 @@ pd_inter, pfa_inter, rmse_angle_inter, rmse_range_inter, rmse_pos_inter = [], []
 for i in range(len(epoch_test_list)):
     pd_temp, pfa_temp, rmse_angle_temp, rmse_range_temp, rmse_pos_temp = \
         testBaselineSensingFixPfa(sigma_sens, theta_min_sens_test, theta_max_sens_test, \
-                              range_min_sens_test, range_max_sens_test, K, S, Delta_f, \
-                              ant_d, assumed_d, lamb, Ngrid_angle, Ngrid_range, \
-                              msg_card, refConst, N0, target_pfa, delta_pfa, \
-                              thresholds_pfa, nTestSamples, batch_size, \
-                              device)
+                                range_min_sens_test, range_max_sens_test, K, S, N0, Delta_f, \
+                                lamb, ant_d, assumed_d, Ngrid_angle, Ngrid_range, \
+                                refConst, target_pfa, delta_pfa, \
+                                thresholds_pfa, batch_size, nTestSamples, \
+                                device)
     pd_inter.append(pd_temp)
     pfa_inter.append(pfa_temp)
     rmse_angle_inter.append(rmse_angle_temp)
