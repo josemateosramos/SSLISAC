@@ -8,7 +8,7 @@ file_name = 'baseline'
 if impaired_flag:
     file_name += '_unknown_impairments'
 else:
-    file_name += 'known_impairments'
+    file_name += '_known_impairments'
 
 """# Test for a fixed false alarm rate"""
 
