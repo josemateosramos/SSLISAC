@@ -61,7 +61,7 @@ span_min_range = range_max_glob - range_min_glob
 span_max_range = range_max_glob - range_min_glob
 Ngrid_angle    = 720                #Number of points in the oversampled grid of angles
 Ngrid_range    = 200                #Number of points in the oversampled grid of ranges
-batch_size     = 1000
+batch_size     = 3000
 #List of epochs to evaluate the models while learning
 epoch_test_list     = [1, 200, 400, 600, 700, 800, 850, 900, 1000, 1500, 2000, 2500, 3000, 3500,
                         5000, 6500, 8000, 1e4, 1.25e4, 1.5e4, 2e4, 2.5e4, 3e4,
