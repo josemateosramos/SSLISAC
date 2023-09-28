@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
-import torch.functional as F
+import torch.nn.functional as F
 import numpy as np
 
 """# Generic functions"""
@@ -1198,16 +1198,14 @@ def testBaselineISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_m
         #Create mean and span values from testing angular sector
         theta_mean_min_sens = theta_mean_max_sens = (theta_min_sens_test+theta_max_sens_test)/2.0
         span_min_theta_sens = span_max_theta_sens = theta_max_sens_test-theta_min_sens_test
-        theta_mean_min_sens = theta_mean_max_sens = (theta_min_sens_test+theta_max_sens_test)/2.0
-        span_min_theta_sens = span_max_theta_sens = theta_max_sens_test-theta_min_sens_test
         theta_mean_min_comm = theta_mean_max_comm = (theta_min_comm_test+theta_max_comm_test)/2.0
         span_min_theta_comm = span_max_theta_comm = theta_max_comm_test-theta_min_comm_test
 
         #Create radar and communication precoders (learned spacing)
-        precoder_sens, _, _, A_matrix, b_matrix_angle = createPrecoder(theta_mean_min_sens, theta_mean_max_sens, \
-                                                                    span_min_theta_sens, span_max_theta_sens, K, \
-                                                                    batch_size, d=assumed_d, lamb=lamb, \
-                                                                    Ngrid = Ngrid_angle, device=device)
+        precoder_sens, _, _, _, _ = createPrecoder(theta_mean_min_sens, theta_mean_max_sens, \
+                                                    span_min_theta_sens, span_max_theta_sens, K, \
+                                                    batch_size, d=assumed_d, lamb=lamb, \
+                                                    Ngrid = Ngrid_angle, device=device)
         precoder_sens = precoder_sens[:,0].view(1,-1)
         precoder_comm, _, _, _, _ = createPrecoder(theta_mean_min_comm, theta_mean_max_comm, \
                                                 span_min_theta_comm, span_max_theta_comm, K, \
