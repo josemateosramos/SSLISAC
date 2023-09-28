@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+import torch
+import torch.functional as F
+import numpy as np
+
 """# Generic functions"""
 
 def noise(var, dims, device='cpu'):
@@ -965,7 +969,7 @@ def testNetworkISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_ma
         location of the target. non-negative Float.
         - range_max_sens_test: maximum range of the coarse range sector of the
         location of the target. non-negative Float.
-        - Ngrid_angle: number of points to perform angular grid search.
+        - Ngrid_angle: number of points to perform angular grid search. Integer
         - range_grid: grid of ranges to perform grid search for range estimation.
         Float tensor. The length of range_grid is denoted Ngrid_range.
         - pixels_angle: number of elements in the angle dimension to look around
@@ -1014,8 +1018,6 @@ def testNetworkISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_ma
         #Create mean and span values from testing angular sector
         theta_mean_min_sens = theta_mean_max_sens = (theta_min_sens_test+theta_max_sens_test)/2.0
         span_min_theta_sens = span_max_theta_sens = theta_max_sens_test-theta_min_sens_test
-        #Create matrix to compute the angle-delay map
-        P_matrix, _ = rhoMatrix(range_grid, range_grid, S, Delta_f, device=device)
         theta_mean_min_sens = theta_mean_max_sens = (theta_min_sens_test+theta_max_sens_test)/2.0
         span_min_theta_sens = span_max_theta_sens = theta_max_sens_test-theta_min_sens_test
         theta_mean_min_comm = theta_mean_max_comm = (theta_min_comm_test+theta_max_comm_test)/2.0
@@ -1033,7 +1035,7 @@ def testNetworkISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_ma
                                                 Ngrid = Ngrid_angle, device=device)
         precoder_comm = precoder_comm[:,0].view(1,-1)
 
-        # Create binray matrix (b_size x 1 x N_grid_range) whose columns are 1 for ranges within the considered limits
+        # Create binary matrix (b_size x 1 x N_grid_range) whose columns are 1 for ranges within the considered limits
         b_matrix_range = ((range_grid >= range_min_sens_test.view(1,1,1)) \
                             & (range_grid <= range_max_sens_test.view(1,1,1))).type(torch.cfloat)
 
@@ -1129,6 +1131,185 @@ def testNetworkISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_ma
 
     return pd_total, pfa_total, rmse_angle_total, rmse_range_total, rmse_pos_total, ser_total
 
+def testBaselineISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_max_sens_test, theta_min_comm_test,
+                    theta_max_comm_test, range_min_sens_test,
+                    range_max_sens_test, Ngrid_angle, Ngrid_range,
+                    K, S, N0, Delta_f, lamb, true_d, assumed_d, refConst,
+                    rho, phi, target_pfa, delta_pfa, thresholds, batch_size, nTestSamples, device='cpu'):
+    '''
+    Function to test the sensing performance of a network for a fixed false alarm probability.
+    Inputs:
+        - sigma_sens: standard deviation of the complex channel gain. non-
+        negative Float.
+        - sigma_vector_comm: vector of variances for the different taps of the
+        communication channel. Float tensor of length S
+        - theta_min_sens_test: minimum angle of the coarse angular sector of the
+        location of the target. Float, radians.
+        - theta_max_sens_test: maximum angle of the coarse angular sector of the
+        location of the target. Float, radians.
+        - theta_min_comm_test: minimum angle of the coarse angular sector of the
+        location of the UE. Float, radians.
+        - theta_max_comm_test: maximum angle of the coarse angular sector of the
+        location of the UE. Float, radians.
+        - range_min_sens_test: minimum range of the coarse range sector of the
+        location of the target. non-negative Float.
+        - range_max_sens_test: maximum range of the coarse range sector of the
+        location of the target. non-negative Float.
+        - Ngrid_angle: number of points to perform angular grid search. Integer.
+        - Ngrid_range: number of points to perform range grid search. Integer.
+        - K: number of antenna elements. Integer.
+        - S: number of subcarriers. Integer.
+        - N0: variance of the noise added at the receiver. non-negative Float.
+        - Delta_f: spacing in Hz between different subcarriers. non-negative Float.
+        - lamb: wavelength. non-negative Float.
+        - true_d: true inter-antenna spacing to be used in the channel model.
+        Float tensor of length K.
+        - assumed_d: assumed inter-antenna spacing. Float tensor of length K.
+        - refConst: constellation of the transmitted communication symbols.
+        Complex Tensor whose length is msg_card.
+        - rho: weights to combine the sensing and communication precoders. Float
+        list.
+        - phi: list of phases to combine the sensing and communication precoders.
+        Float list.
+        - target_pfa: target false alarm probability (Pfa) to evaluate. Float.
+        - delta_pfa: maximum allowed variation of the empirical Pfa with target_pfa.
+        Float.
+        - thresholds: thresholds to apply to distinguish if there is a target.
+        Float tensor of length more than 1 (usually 3).
+        - batch_size: size of the data batch. Integer.
+        - nTestSamples: number of testing samples. Integer.
+        - device: 'cuda' or 'cpu'. Default: 'cpu'.
+    Outputs:
+        - pd_inter: probability of detection. Float.
+        - pfa_inter: probability of false alarm (to check with input). Float.
+        - rmse_angle_inter: angle RMSE in rads. Float.
+        - rmse_range_inter: range RMSE in meters. Float.
+        - rmse_pos_inter: position RMSE in meters. Float.
+    '''
+
+    with torch.no_grad():
+        #Lists of metrics to save at the end
+        pd_total, pfa_total, ser_total = [], [], []
+        rmse_angle_total, rmse_range_total, rmse_pos_total = [], [], []
+
+        #Get information from the input data
+        msg_card = len(refConst)
+        numTestIt = nTestSamples // batch_size
+        #Create mean and span values from testing angular sector
+        theta_mean_min_sens = theta_mean_max_sens = (theta_min_sens_test+theta_max_sens_test)/2.0
+        span_min_theta_sens = span_max_theta_sens = theta_max_sens_test-theta_min_sens_test
+        theta_mean_min_sens = theta_mean_max_sens = (theta_min_sens_test+theta_max_sens_test)/2.0
+        span_min_theta_sens = span_max_theta_sens = theta_max_sens_test-theta_min_sens_test
+        theta_mean_min_comm = theta_mean_max_comm = (theta_min_comm_test+theta_max_comm_test)/2.0
+        span_min_theta_comm = span_max_theta_comm = theta_max_comm_test-theta_min_comm_test
+
+        #Create radar and communication precoders (learned spacing)
+        precoder_sens, _, _, A_matrix, b_matrix_angle = createPrecoder(theta_mean_min_sens, theta_mean_max_sens, \
+                                                                    span_min_theta_sens, span_max_theta_sens, K, \
+                                                                    batch_size, d=assumed_d, lamb=lamb, \
+                                                                    Ngrid = Ngrid_angle, device=device)
+        precoder_sens = precoder_sens[:,0].view(1,-1)
+        precoder_comm, _, _, _, _ = createPrecoder(theta_mean_min_comm, theta_mean_max_comm, \
+                                                span_min_theta_comm, span_max_theta_comm, K, \
+                                                batch_size, d=assumed_d, lamb=lamb, \
+                                                Ngrid = Ngrid_angle, device=device)
+        precoder_comm = precoder_comm[:,0].view(1,-1)
+
+        for k in range(len(rho)):
+            for l in range(len(phi)):
+                #Create lists to save results in each iteration
+                true_presence_list = torch.empty(nTestSamples, 1, dtype=torch.float32, device=device)
+                true_angle_list    = torch.empty(nTestSamples, 1, dtype=torch.float32, device=device)
+                true_range_list    = torch.empty(nTestSamples, 1, dtype=torch.float32, device=device)
+                est_presence_list  = torch.empty(nTestSamples, 1, dtype=torch.float32, device=device)
+                est_angle_list     = torch.empty(nTestSamples, 1, dtype=torch.float32, device=device)
+                est_range_list     = torch.empty(nTestSamples, 1, dtype=torch.float32, device=device)
+                true_msg_list      = torch.empty(nTestSamples*S, 1, dtype=torch.float32, device=device)
+                est_msg_list       = torch.empty(nTestSamples*S, 1, dtype=torch.float32, device=device)
+
+                #Create precoder for testing
+                precoder = createCommonPrecoder(precoder_sens, precoder_comm, rho[k], phi[l], batch_size)
+                precoder_rsh = precoder.reshape((batch_size, K, 1))
+
+                for i in range(numTestIt):
+                    #Generate random logic vector that tells if there is a target
+                    target = torch.randint(0,2,(batch_size,1,1), dtype=torch.float32, device=device)
+                    #Generate random messages to transmit
+                    msg = createMessages(msg_card, num=batch_size*S, device=device)
+                    #Reshape msgs to the needs of the comm CH function
+                    symbols = refConst[msg].reshape(batch_size, S, 1)
+
+                    #Sensing channel
+                    Y_sens, true_angle, true_range = sensingChannel(sigma_sens, theta_min_sens_test, theta_max_sens_test,
+                                                                precoder_rsh, symbols, range_min_sens_test,
+                                                                range_max_sens_test, N0, target, Delta_f, lamb,
+                                                                true_d, device)
+
+                    #Communication channel
+                    y_comm, true_theta_comm, true_beta_comm = commChannel(sigma_vector_comm, theta_min_comm_test, \
+                                                                        theta_max_comm_test, K, true_d, lamb, \
+                                                                        precoder_rsh, symbols, N0, device)
+                    # Sensing Receiver
+                    max_admap, est_angle, est_range = sensingReceiverBaseline(Y_sens, symbols, theta_min_sens_test, \
+                                                                    theta_max_sens_test, range_min_sens_test, \
+                                                                    range_max_sens_test, Delta_f, \
+                                                                    d=assumed_d, lamb=lamb,\
+                                                                    numSamplesAngle = Ngrid_angle, \
+                                                                    numSamplesRange = Ngrid_range, \
+                                                                    device = device)
+
+                    #Comm. receiver
+                    kappa = createKappa(true_beta_comm, true_theta_comm, K, true_d, lamb, precoder_rsh, device)
+                    est_messages = MLdecoder(y_comm, kappa, refConst)
+
+                    #Save true values
+                    true_presence_list[i*batch_size:(i+1)*batch_size] = target.view(batch_size,1)
+                    true_angle_list[i*batch_size:(i+1)*batch_size] = true_angle
+                    true_range_list[i*batch_size:(i+1)*batch_size] = true_range
+                    true_msg_list[i*S*batch_size:(i+1)*S*batch_size] = msg.view(-1,1)
+                    #Save estimations
+                    est_presence_list[i*batch_size:(i+1)*batch_size] = max_admap[:,0].view(-1,1)    #Here only the 1st column is needed
+                    est_angle_list[i*batch_size:(i+1)*batch_size] = est_angle
+                    est_range_list[i*batch_size:(i+1)*batch_size] = est_range
+                    est_msg_list[i*S*batch_size:(i+1)*S*batch_size] = est_messages.view(-1,1)
+
+                # ================= CALCULATE SER =======================
+                num_errors = (true_msg_list != est_msg_list).sum()
+                ser = num_errors/(nTestSamples * S)
+                #Add SER to vector
+                ser_total.append(ser.item())
+
+                # ================= CALCULATE sensing metrics =======================
+                #Get thresholds that give relatively close to the target Pfa
+                init_thr = torch.clone(thresholds)      #To avoid that the next function overwrites the thresholds.
+                final_thr = obtainThresholdsFixedPfa(est_presence_list, true_presence_list, target_pfa, delta_pfa, init_thr, device)
+
+                #Lists to save final results
+                pd, pfa, rmse_angle, rmse_range, rmse_pos = [], [], [], [], []
+
+                #Compute detection and false alarm probabilities, and RMSEs
+                for t in range(len(final_thr)):
+                    pd_temp, pfa_temp, rmse_angle_temp, rmse_range_temp, rmse_pos_temp = getSensingMetrics(est_presence_list, true_presence_list,
+                                                                                                        final_thr[t], est_angle_list,
+                                                                                                        true_angle_list, est_range_list,
+                                                                                                        true_range_list, device)
+                    pd.append(pd_temp)
+                    pfa.append(pfa_temp)
+                    rmse_angle.append(rmse_angle_temp)
+                    rmse_range.append(rmse_range_temp)
+                    rmse_pos.append(rmse_pos_temp)
+
+                #Save data after target_pfa - delta_pfa < pfa < target_pfa + delta_pfa (sorting avoids problems with values very similar but not equal)
+                pd_total.append(np.interp(1e-2,np.sort(pfa),np.sort(pd)))
+                pfa_total.append(np.array(pfa).mean())
+                rmse_angle_total.append(np.interp(1e-2,np.sort(pfa),np.sort(rmse_angle)))
+                rmse_range_total.append(np.interp(1e-2,np.sort(pfa),np.sort(rmse_range)))
+                rmse_pos_total.append(np.interp(1e-2,np.sort(pfa),np.sort(rmse_pos)))
+
+                print(f'#=== COMPLETED ITERATION {k*len(phi)+l+1}/{len(phi)*len(rho)} ===#', flush=True)
+
+    return pd_total, pfa_total, rmse_angle_total, rmse_range_total, rmse_pos_total, ser_total
+
 """# Baseline functions"""
 
 def sensingReceiverBaseline(Y_sens, symbols, theta_min, theta_max, r_min, r_max, \
@@ -1163,7 +1344,7 @@ def sensingReceiverBaseline(Y_sens, symbols, theta_min, theta_max, r_min, r_max,
         sample. Shape: (batch_size, 1)
     '''
     batch_size, K, S = Y_sens.shape
-
+    
     #Remove effect of transmitted comm. symbols
     Y_sens /= symbols.transpose(-1,-2)
 

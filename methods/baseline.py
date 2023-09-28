@@ -40,11 +40,39 @@ plt.xlabel('Number of training iterations')
 plt.ylabel('Misdetection probability')
 plt.legend()
 
+"""# Test ISAC"""
+
+pd_isac, pfa_isac, rmse_angle_isac, rmse_range_isac, rmse_pos_isac, ser_isac = \
+    testBaselineISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_max_sens_test, theta_min_comm_test,
+                    theta_max_comm_test, range_min_sens_test,
+                    range_max_sens_test, Ngrid_angle, Ngrid_range,
+                    K, S, N0, Delta_f, lamb, true_d, assumed_d, refConst,
+                    rho, phi, target_pfa, delta_pfa, thresholds, batch_size, nTestSamples, device='cpu')
+
+"""### Plot ISAC results"""
+
+plt.figure()
+plt.semilogx(ser_isac, 1-np.array(pd_isac), 'o-', label=f'Supervised learning (SL)')
+plt.grid()
+plt.xlabel('Symbol error rate')
+plt.ylabel('Misdetection probability')
+plt.legend()
+
+plt.figure()
+plt.semilogx(ser_isac, rmse_pos_isac, 'o-', label=f'Supervised learning (SL)')
+plt.grid()
+plt.xlabel('Symbol error rate')
+plt.ylabel('Position RMSE [m]')
+plt.legend()
+
 """# Save results"""
 
 np.savez(save_path + file_name, \
-         pd_inter = pd_inter, pfa_inter = pfa_inter, \
-         rmse_angle_inter = rmse_angle_inter, \
-         rmse_range_inter = rmse_range_inter, \
-         rmse_pos_inter = rmse_pos_inter
+        pd_inter = pd_inter, pfa_inter = pfa_inter, \
+        rmse_angle_inter = rmse_angle_inter, \
+        rmse_range_inter = rmse_range_inter, \
+        rmse_pos_inter = rmse_pos_inter, \
+        ser_isac = ser_isac, pd_isac = pd_isac, \
+        pfa_isac = pfa_isac, rmse_angle_isac = rmse_angle_isac, \
+        rmse_range_isac = rmse_range_isac, rmse_pos_isac = rmse_pos_isac
         )
