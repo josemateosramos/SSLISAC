@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-import torch
-import torch.nn as nn
-import matplotlib.pyplot as plt
 import sys
 # caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, '../lib/')

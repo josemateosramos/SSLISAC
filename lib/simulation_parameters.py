@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import torch
+import torch.nn as nn
 import numpy as np
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
 
-import sys
-# caution: path[0] is reserved for script path (or '' in REPL)
-sys.path.insert(1, '../lib/')
 from functions import *
-from neural_networks import *
+from learnable_parameters import *
 
 #Fix seed for reproducibility
 torch.manual_seed(10)
