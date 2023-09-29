@@ -58,7 +58,7 @@ pd_isac, pfa_isac, rmse_angle_isac, rmse_range_isac, rmse_pos_isac, ser_isac = \
     testNetworkISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_max_sens_test, theta_min_comm_test,
                     theta_max_comm_test, range_min_sens_test,
                     range_max_sens_test, Ngrid_angle, range_grid, pixels_angle, pixels_range,
-                    K, S, N0, Delta_f, lamb, true_d, network.d, refConst,
+                    K, S, N0, Delta_f, lamb, ant_d, network.d, refConst,
                     rho, phi, target_pfa, delta_pfa, thresholds_pfa, batch_size, nTestSamples, device)
 
 """### Plot ISAC results"""
