@@ -4,14 +4,14 @@ import sys
 sys.path.insert(1, '../lib/')
 from simulation_parameters import *
 
-file_name = 'SSL_SL_UL'
+file_name = 'SSL_SL_UL_' + str(train_it_super)
 
 """# Training
 
 ## Supervised training and intermediate testing
 """
 
-loss_super, _, pd_inter_super, num_it_super, pfa_inter_super, \
+loss_super, _, num_it_super, pd_inter_super, pfa_inter_super, \
     rmse_angle_inter_super, rmse_range_inter_super, \
     rmse_pos_inter_super = trainNetwork(network, 0, train_it_super, sigma_sens, theta_mean_min, theta_mean_max, span_min_theta,
                                   span_max_theta, range_mean_min, range_mean_max, span_min_range,
@@ -88,6 +88,6 @@ np.savez(save_path + file_name, \
         loss_unsuper = loss_unsuper, loss_val_super = loss_val_super, \
         pd_isac = pd_isac, pfa_isac = pfa_isac, \
         rmse_angle_isac = rmse_angle_isac, rmse_range_isac = rmse_range_isac, \
-        rmse_pos_isac = rmse_pos_isac, \
+        rmse_pos_isac = rmse_pos_isac, ser_isac = ser_isac, \
         learned_d = network.d.cpu().detach().numpy()
         )

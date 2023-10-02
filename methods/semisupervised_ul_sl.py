@@ -88,6 +88,6 @@ np.savez(save_path + file_name, \
         loss_unsuper = loss_unsuper, loss_val_super = loss_val_super, \
         pd_isac = pd_isac, pfa_isac = pfa_isac, \
         rmse_angle_isac = rmse_angle_isac, rmse_range_isac = rmse_range_isac, \
-        rmse_pos_isac = rmse_pos_isac, \
+        rmse_pos_isac = rmse_pos_isac, ser_isac = ser_isac, \
         learned_d = network.d.cpu().detach().numpy()
         )

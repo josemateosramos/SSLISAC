@@ -1127,7 +1127,7 @@ def testNetworkISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_ma
                 rmse_range_total.append(np.interp(1e-2,np.sort(pfa),np.sort(rmse_range)))
                 rmse_pos_total.append(np.interp(1e-2,np.sort(pfa),np.sort(rmse_pos)))
 
-                print(f'#=== COMPLETED ITERATION {k*len(phi)+l+1}/{len(phi)*len(rho)} ===#', flush=True)
+                print(f'#=== Completed testing iteration {k*len(phi)+l+1}/{len(phi)*len(rho)} ===#', flush=True)
 
     return pd_total, pfa_total, rmse_angle_total, rmse_range_total, rmse_pos_total, ser_total
 
@@ -1304,7 +1304,7 @@ def testBaselineISAC(sigma_sens, sigma_vector_comm, theta_min_sens_test, theta_m
                 rmse_range_total.append(np.interp(1e-2,np.sort(pfa),np.sort(rmse_range)))
                 rmse_pos_total.append(np.interp(1e-2,np.sort(pfa),np.sort(rmse_pos)))
 
-                print(f'#=== COMPLETED ITERATION {k*len(phi)+l+1}/{len(phi)*len(rho)} ===#', flush=True)
+                print(f'#=== Completed testing iteration {k*len(phi)+l+1}/{len(phi)*len(rho)} ===#', flush=True)
 
     return pd_total, pfa_total, rmse_angle_total, rmse_range_total, rmse_pos_total, ser_total
 
