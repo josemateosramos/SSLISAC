@@ -63,9 +63,10 @@ Ngrid_angle    = 720                #Number of points in the oversampled grid of
 Ngrid_range    = 200                #Number of points in the oversampled grid of ranges
 batch_size     = 3000
 #List of epochs to evaluate the models while learning
-epoch_test_list     = [1, 200, 400, 600, 700, 800, 850, 900, 1000, 1500, 2000, 2500, 3000, 3500,
+epoch_test_list     = [1, 200, 400, 600, 700, 800, 1000, 1500, 2000, 2500, 3000, 3500,
                         5000, 6500, 8000, 1e4, 1.25e4, 1.5e4, 2e4, 2.5e4, 3e4,
-                        3.5e4, 4e4, 4.5e4, 5e4, 5.5e4, 6e4]
+                        3.5e4, 4e4, 4.5e4, 5e4, 5.5e4, 6e4, 6.5e4, 7e4, 7.5e4,
+                        8e4, 8.1e4, 8.2e4, 8.3e4, 8.4e4, 8.42e4, 8.5e4]
 #Testing values after training
 nTestSamples        = int(1.2e6)         #This value will be slightly changed later to be a multiple of batch_size
 theta_min_sens_test = torch.tensor(-40*np.pi/180, dtype=torch.float32, device=device)
@@ -103,10 +104,6 @@ else:
 numTestIt      = nTestSamples // batch_size                                       #Number of test iterations
 nTestSamples   = numTestIt*batch_size                                             #Recompute test samples to be a multiple of batch_Size
 thresholds_pfa  = torch.linspace(463, 462, 3, device=device)                      #List of thresholds for sensing testing and a fix Pfa
-epoch_test_list = [1, 200, 400, 600, 700, 800, 1000, 1500, 2000, 2500, 3000, 3500,
-                   5000, 6500, 8000, 1e4, 1.25e4, 1.5e4, 2e4, 2.5e4, 3e4,
-                   3.5e4, 4e4, 4.5e4, 5e4, 5.5e4, 6e4, 6.5e4, 7e4, 7.5e4,
-                   8e4, 8.1e4, 8.2e4, 8.3e4, 8.4e4, 8.42e4, 8.5e4]
 
 ######## NN-related parameters ########
 network          = PertNet(assumed_d.cpu()).to(device)
