@@ -642,8 +642,8 @@ def obtainThresholdsFixedPfa(est_presence, true_presence, target_pfa, delta_pfa,
     target_pfa - delta_pfa < pfa < target_pfa + delta_pfa.
     We then linearly interpolate the results.
     Inputs:
-        - est_presence: estimated presence of a target. Binary list whose
-        length is nTestSamples.
+        - est_presence: metric to threshold to estimate if there is a target in 
+        the environment. Float list of length nTestSamples.
         - true_presence: true presence of a target. Binary list whose length
         is nTestSamples.
         - target_pfa: target false alarm proability. Float.
