@@ -7,4 +7,4 @@ The simulation parameters to train and test different scenarios are located in t
 
 ## Additional information
 If you decide to use the source code for your research, please make sure to cite our paper:
-- J. M. Mateos-Ramos, B. Chatelier, C. Häger, M. F. Keskin, L. L. Magoarou, and H. Wymeersch, "Semi-Supervised End-to-End Learning for Integrated Sensing and Communications." available soon on arXiv.
+- J. M. Mateos-Ramos, B. Chatelier, C. Häger, M. F. Keskin, L. L. Magoarou, and H. Wymeersch, "Semi-Supervised End-to-End Learning for Integrated Sensing and Communications", arXiv preprint arXiv:2310.09940, Oct. 2023.
