@@ -56,7 +56,7 @@ def steeringMatrix(theta_min, theta_max, K, d, lamb, device='cpu'):
         - lamb: carrier wavelength. Real number.
         - device: 'cpu' or 'cuda'.
     Outputs:
-        - steeringMatrix: matrix whose columns are steering vectors. Shape: (K,
+        - outMatrix: matrix whose columns are steering vectors. Shape: (K,
         batch_size)
         - theta: realization of the random variable of the angle. Shape: (1,
         batch_size)
@@ -64,10 +64,10 @@ def steeringMatrix(theta_min, theta_max, K, d, lamb, device='cpu'):
     theta = torch.rand(theta_min.shape, device=device) * (theta_max - theta_min) + theta_min #Uniform in [theta_min, theta_max)
     theta = theta.view(1, -1)   #Row vector to have steering vectors in columns at the output
 
-    steeringMatrix = torch.exp(-1j * 2 * np.pi / lamb * d * \
+    outMatrix = torch.exp(-1j * 2 * np.pi / lamb * d * \
                                torch.arange(-(K-1)/2.0,(K-1)/2.0+1, device=device).view(-1,1).type(torch.cfloat) \
                                @ torch.sin(theta.type(torch.cfloat)))
-    return steeringMatrix, theta
+    return outMatrix, theta
 
 def rhoMatrix(range_min, range_max, S, Delta_f, device='cpu'):
     '''
@@ -83,7 +83,7 @@ def rhoMatrix(range_min, range_max, S, Delta_f, device='cpu'):
         - Delta_f: subcarrier spacing. Real number.
         - device: 'cpu' or 'cuda'.
     Outputs:
-        - rhoMatrix: matrix whose columns are range-dependent phase shifts.
+        - outMatrix: matrix whose columns are range-dependent phase shifts.
         Shape: (S, batch_size)
         - range: realization of the random variable of the range. Shape: (1,
         batch_size)
@@ -91,10 +91,10 @@ def rhoMatrix(range_min, range_max, S, Delta_f, device='cpu'):
     range_tgt = torch.rand(range_min.shape, device=device) * (range_max - range_min) + range_min #Uniform in [range_min, range_max)
     range_tgt = range_tgt.view(1, -1)   #Row vector to have steering vectors in columns at the output
 
-    rhoMatrix = torch.exp(-1j * 2 * np.pi * Delta_f * 2/3e8 * \
+    outMatrix = torch.exp(-1j * 2 * np.pi * Delta_f * 2/3e8 * \
                           torch.arange(S, device=device).view(-1,1).type(torch.cfloat) \
                           @ range_tgt.type(torch.cfloat))
-    return rhoMatrix, range_tgt
+    return outMatrix, range_tgt
 
 def createInterval(mean_min, mean_max, span_min, span_max, batch_size=1, device='cpu'):
     '''
